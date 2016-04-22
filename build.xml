@@ -126,22 +126,18 @@
   <!-- ==================================================================== -->
   <!-- Gets the revision from the repository                                -->
   <!-- ==================================================================== -->
-  <target name="find_revision" description="Sets property 'revision.number' to the head svn revision">
-    <property name="revision" value="COMMITTED"/>
-
-    <exec executable="svn" output="svnlog.out">
-      <arg line="info -r ${revision}"/>
+  <target name="find_revision" description="Sets property 'Revision' to the Git HEAD hash">
+    <exec executable="git" output="hash.out">
+      <arg line="rev-parse --short HEAD"/>
     </exec>
-    <loadproperties srcFile="svnlog.out">
+    <loadfile property="Revision" srcFile="hash.out">
       <filterchain>
-        <linecontains>
-          <contains value="Revision"/>
-        </linecontains>
+        <filterreader classname="org.apache.tools.ant.filters.StripLineBreaks"/>
       </filterchain>
-    </loadproperties>
-    <delete file="svnlog.out"/>
+    </loadfile>
+    <delete file="hash.out"/>
 
-    <fail message="Failed to get revision info from SVN">
+		<fail message="Failed to get hash from Git">
       <condition>
         <not>
           <isset property="Revision"/>
