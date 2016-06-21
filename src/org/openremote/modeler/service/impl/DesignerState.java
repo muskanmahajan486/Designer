@@ -492,6 +492,16 @@ class DesignerState
 
           restoreLog.info("Restored UI state : {0}", this);
           
+          
+          MaxComponentOidComputeOperation maxComponentOidOperation = new MaxComponentOidComputeOperation();
+          Panel.walkAllUIComponents(panels, maxComponentOidOperation);
+          long computedOid = maxComponentOidOperation.getMaxOid();
+
+          if (computedOid != this.maxOID) {
+            restoreLog.warn("Restored maxOID ({0}) does not match computed one ({1}), setting to {2}", this.maxOID, computedOid, computedOid + 1);
+            this.maxOID = computedOid + 1;
+          }
+
           // TODO :
           //    this should be pushed deeper into the call stack, either into the designer state
           //    implementation (which can implement a translation to DTOs, similar to the current
@@ -1531,6 +1541,27 @@ class DesignerState
 
   public void setSwitchService(SwitchService switchService) {
     this.switchService = switchService;
+  }
+
+  /**
+   * Operation used to walk the UI tree and compute the maximum value used for a component oid.
+   * 
+   * @author <a href="mailto:eric@openremote.org">Eric Bariaux</a>
+   */
+  private class MaxComponentOidComputeOperation implements UIComponentOperation {
+
+    private long maxOid = 0;
+    
+    @Override
+    public void execute(UIComponent component) {
+      if (component.getOid() > maxOid) {
+        maxOid = component.getOid();
+      }
+    }
+
+    public long getMaxOid() {
+      return maxOid;
+    }
   }
 
 }
