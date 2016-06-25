@@ -2,6 +2,7 @@ Version 2.5.2
 =============
 
  - Fix misleading wording on login page still refering to "Professional" (#1)
+ - Fixed calls to Beehive that were still using hashed password (#2)
 
 Version 2.5.0
 =============
