@@ -65,7 +65,6 @@ import org.openremote.modeler.client.model.Command;
 import org.openremote.modeler.client.utils.PanelsAndMaxOid;
 import org.openremote.modeler.configuration.PathConfig;
 import org.openremote.modeler.domain.Absolute;
-import org.openremote.modeler.domain.Account;
 import org.openremote.modeler.domain.Cell;
 import org.openremote.modeler.domain.CommandDelay;
 import org.openremote.modeler.domain.CommandRefItem;
@@ -87,7 +86,6 @@ import org.openremote.modeler.domain.Sensor;
 import org.openremote.modeler.domain.Slider;
 import org.openremote.modeler.domain.Switch;
 import org.openremote.modeler.domain.UICommand;
-import org.openremote.modeler.domain.User;
 import org.openremote.modeler.domain.component.ColorPicker;
 import org.openremote.modeler.domain.component.Gesture;
 import org.openremote.modeler.domain.component.SensorOwner;
@@ -112,6 +110,7 @@ import org.openremote.modeler.service.DeviceMacroService;
 import org.openremote.modeler.service.SensorService;
 import org.openremote.modeler.service.SliderService;
 import org.openremote.modeler.service.SwitchService;
+import org.openremote.modeler.service.UserService.UserAccount;
 import org.openremote.modeler.shared.dto.DeviceCommandDTO;
 import org.openremote.modeler.shared.dto.MacroDTO;
 import org.openremote.modeler.shared.dto.UICommandDTO;
@@ -207,15 +206,10 @@ public class LocalFileCache implements ResourceCache<File>
   private Configuration configuration;
 
   /**
-   * The account with which this cache is associated with.
-   */
-  private Account account;
-
-  /**
    * The current user associated with the calling thread that is accessing the account which
    * this cache belongs to.
    */
-  private User currentUser;
+  private UserAccount currentUserAccount;
 
   /**
    * The path to an account's cache folder in the local filesystem.
@@ -246,15 +240,13 @@ public class LocalFileCache implements ResourceCache<File>
    * @param user      The current user whose associated account and it's cache in local file
    *                  system will be manipulated.
    */
-  public LocalFileCache(Configuration config, User user)
+  public LocalFileCache(Configuration config, UserAccount userAccount)
   {
     this.configuration = config;
 
-    this.account = user.getAccount();
+    this.currentUserAccount = userAccount;
 
-    this.currentUser = user;
-
-    this.cacheFolder = new File(PathConfig.getInstance(config).userFolder(account));
+    this.cacheFolder = new File(PathConfig.getInstance(config).userFolder(currentUserAccount.getAccount()));
   }
 
 
@@ -395,13 +387,13 @@ public class LocalFileCache implements ResourceCache<File>
 
     catch (CacheOperationException e)
     {
-      haltAccountBackups.add(account.getOid());
+      haltAccountBackups.add(currentUserAccount.getAccount().getOid());
 
       admin.alert("Local cache operation error : {0}", e, e.getMessage());
     }
 
 
-    cacheLog.info("Updating account cache for {0}.", printUserAccountLog(currentUser));
+    cacheLog.info("Updating account cache for {0}.", printUserAccountLog(currentUserAccount));
 
 
     // Make sure cache folder is present, if not then create it...
@@ -425,7 +417,7 @@ public class LocalFileCache implements ResourceCache<File>
 
     try
     {
-      beehive.downloadResources(currentUser, this);
+      beehive.downloadResources(currentUserAccount, this);
     }
 
     catch (BeehiveServiceException e)
@@ -442,8 +434,7 @@ public class LocalFileCache implements ResourceCache<File>
     {
       cacheLog.info(
           "No user resources were downloaded from Beehive. Assuming new user account ''{0}''",
-          currentUser.getUsername()
-      );
+          currentUserAccount.getUsernamePassword().getUsername());
 
       return;
     }
@@ -522,13 +513,13 @@ public class LocalFileCache implements ResourceCache<File>
 
     catch (CacheOperationException e)
     {
-      haltAccountBackups.add(account.getOid());
+      haltAccountBackups.add(currentUserAccount.getAccount().getOid());
 
       admin.alert("Local cache operation error : {0}", e, e.getMessage());
     }
 
 
-    cacheLog.info("Replacing account cache for {0}.", printUserAccountLog(currentUser));
+    cacheLog.info("Replacing account cache for {0}.", printUserAccountLog(currentUserAccount));
 
 
     // We want to be sure we don't have any leftovers in the cache
@@ -709,7 +700,7 @@ public class LocalFileCache implements ResourceCache<File>
     {
       throw new ConfigurationException(
           "Security manager denied read access to file ''{0}'' (Account : {1}) : {2}",
-          e, panelsObjFile.getAbsolutePath(), account.getOid(), e.getMessage()
+          e, panelsObjFile.getAbsolutePath(), currentUserAccount.getAccount().getOid(), e.getMessage()
       );
     }
 
@@ -725,7 +716,7 @@ public class LocalFileCache implements ResourceCache<File>
     {
       throw new ConfigurationException(
           "Security manager denied read access to file ''{0}'' (Account : {1}) : {2}",
-          e, rulesFile.getAbsolutePath(), account.getOid(), e.getMessage()
+          e, rulesFile.getAbsolutePath(), currentUserAccount.getAccount().getOid(), e.getMessage()
       );
     }
 
@@ -741,7 +732,7 @@ public class LocalFileCache implements ResourceCache<File>
     {
       throw new ConfigurationException(
           "Security manager denied read access to file ''{0}'' (Account : {1}) : {2}",
-          e, lircdFile, account.getOid(), e.getMessage()
+          e, lircdFile, currentUserAccount.getAccount().getOid(), e.getMessage()
       );
     }
 
@@ -762,7 +753,7 @@ public class LocalFileCache implements ResourceCache<File>
           throw new CacheOperationException(
               "Cannot complete export archive operation. Unable to create required " +
               "file directory ''{0}'' for cache (Account ID = {1}).",
-              exportDir.getAbsolutePath(), account.getOid()
+              exportDir.getAbsolutePath(), currentUserAccount.getAccount().getOid()
           );
         }
       }
@@ -775,7 +766,7 @@ public class LocalFileCache implements ResourceCache<File>
         {
           throw new CacheOperationException(
               "Cannot complete export archive operation. Unable to delete pre-existing " +
-              "file ''{0}'' (Account ID = {1})", targetFile.getAbsolutePath(), account.getOid()
+              "file ''{0}'' (Account ID = {1})", targetFile.getAbsolutePath(), currentUserAccount.getAccount().getOid()
           );
         }
       }
@@ -785,7 +776,7 @@ public class LocalFileCache implements ResourceCache<File>
     {
       throw new ConfigurationException(
           "Security manager denied access to temporary export archive file ''{0}'' for " +
-          "account ID = {1} : {2}", e, targetFile.getAbsolutePath(), account, e.getMessage()
+          "account ID = {1} : {2}", e, targetFile.getAbsolutePath(), currentUserAccount.getAccount().getOid(), e.getMessage()
       );
     }
 
@@ -838,7 +829,7 @@ public class LocalFileCache implements ResourceCache<File>
       else
       {
         cacheLog.info(
-            "Created account {0} cache folder (Users: {1}).", account.getOid(), account.getUsers()
+            "Created account {0} cache folder (User: {1}).", currentUserAccount.getAccount().getOid(), currentUserAccount.getUsernamePassword().getUsername()
         );
       }
     }
@@ -873,7 +864,7 @@ public class LocalFileCache implements ResourceCache<File>
     {
       FileUtils.deleteDirectory(cacheFolder);
       cacheLog.info(
-          "Deleted account {0} cache folder (Users: {1}).", account.getOid(), account.getUsers()
+          "Deleted account {0} cache folder (User: {1}).", currentUserAccount.getAccount().getOid(), currentUserAccount.getUsernamePassword().getUsername()
       );
     }
 
@@ -984,9 +975,9 @@ public class LocalFileCache implements ResourceCache<File>
 
     // See if we should run...
 
-    if (haltAccountBackups.contains(account.getOid()))
+    if (haltAccountBackups.contains(currentUserAccount.getAccount().getOid()))
     {
-      cacheLog.warn("Backups for account {0} have been stopped!", account.getOid());
+      cacheLog.warn("Backups for account {0} have been stopped!", currentUserAccount.getAccount().getOid());
 
       return;
     }
@@ -1331,8 +1322,8 @@ public class LocalFileCache implements ResourceCache<File>
       else
       {
         cacheLog.debug(
-            "Created cache backup folder for account {0} (Users: {1}).",
-            account.getOid(), account.getUsers()
+            "Created cache backup folder for account {0} (User: {1}).",
+            currentUserAccount.getAccount().getOid(), currentUserAccount.getUsernamePassword().getUsername()
         );
       }
     }
@@ -1673,7 +1664,7 @@ public class LocalFileCache implements ResourceCache<File>
                 "Expected to add file ''{0}'' to export archive ''{1}'' (Account : {2}) but it " +
                 "has gone missing (cause unknown). This can indicate implementation or deployment " +
                 "error. Aborting export operation as a safety precaution.",
-                cachePathName.getPath(), target.getAbsolutePath(), account.getOid()
+                cachePathName.getPath(), target.getAbsolutePath(), currentUserAccount.getAccount().getOid()
             );
           }
 
@@ -1709,7 +1700,7 @@ public class LocalFileCache implements ResourceCache<File>
                 "Only wrote {0} out of {1} bytes when archiving file ''{2}'' (Account : {3}). " +
                 "This could have occured either due implementation error or file I/O error. " +
                 "Aborting archive operation to prevent a potentially corrupt export archive to " +
-                "be created.", total, cachePathName.length(), cachePathName.getPath(), account.getOid()
+                "be created.", total, cachePathName.length(), cachePathName.getPath(), currentUserAccount.getAccount().getOid()
             );
           }
 
@@ -1729,7 +1720,7 @@ public class LocalFileCache implements ResourceCache<File>
           throw new ConfigurationException(
               "Security manager has denied r/w access when attempting to read file ''{0}'' and " +
               "write it to archive ''{1}'' (Account : {2}) : {3}",
-              e, cachePathName.getPath(), target, account.getOid(), e.getMessage()
+              e, cachePathName.getPath(), target, currentUserAccount.getAccount().getOid(), e.getMessage()
           );
         }
 
@@ -1739,7 +1730,7 @@ public class LocalFileCache implements ResourceCache<File>
 
           throw new CacheOperationException(
               "Error creating ZIP archive for account ID = {0} : {1}",
-              e, account.getOid(), e.getMessage()
+              e, currentUserAccount.getAccount().getOid(), e.getMessage()
           );
         }
 
@@ -1749,7 +1740,7 @@ public class LocalFileCache implements ResourceCache<File>
               "Attempted to include file ''{0}'' in export archive but it has gone missing " +
               "(Account : {1}). Possible implementation error in local file cache. Aborting  " +
               "export operation as a precaution ({2})",
-              e, cachePathName.getPath(), account.getOid(), e.getMessage()
+              e, cachePathName.getPath(), currentUserAccount.getAccount().getOid(), e.getMessage()
           );
         }
 
@@ -1757,7 +1748,7 @@ public class LocalFileCache implements ResourceCache<File>
         {
           throw new CacheOperationException(
               "Error writing export archive for account ID = {0} : {1}",
-              e, account.getOid(), e.getMessage()
+              e, currentUserAccount.getAccount().getOid(), e.getMessage()
           );
         }
 
@@ -1765,7 +1756,7 @@ public class LocalFileCache implements ResourceCache<File>
         {
           throw new CacheOperationException(
               "I/O error while creating export archive for account ID = {0}. " +
-              "Operation aborted ({1})", e, account.getOid(), e.getMessage()
+              "Operation aborted ({1})", e, currentUserAccount.getAccount().getOid(), e.getMessage()
           );
         }
 
@@ -1783,7 +1774,7 @@ public class LocalFileCache implements ResourceCache<File>
               cacheLog.warn(
                   "Unable to close zip entry for file ''{0}'' in export archive ''{1}'' " +
                   "(Account : {2}) : {3}.",
-                  t, file.getPath(), target.getAbsolutePath(), account.getOid(), t.getMessage()
+                  t, file.getPath(), target.getAbsolutePath(), currentUserAccount.getAccount().getOid(), t.getMessage()
               );
             }
           }
@@ -1799,7 +1790,7 @@ public class LocalFileCache implements ResourceCache<File>
             {
               cacheLog.warn(
                   "Failed to close input stream from file ''{0}'' being added " +
-                  "to export archive (Account : {1}) : {2}", t, cachePathName.getPath(), account.getOid(), t.getMessage()
+                  "to export archive (Account : {1}) : {2}", t, cachePathName.getPath(), currentUserAccount.getAccount().getOid(), t.getMessage()
               );
             }
           }
@@ -1811,7 +1802,7 @@ public class LocalFileCache implements ResourceCache<File>
     {
       throw new CacheOperationException(
           "Unable to create target export archive ''{0}'' for account {1) : {2}",
-          e, target, account.getOid(), e.getMessage()
+          e, target, currentUserAccount.getAccount().getOid(), e.getMessage()
       );
     }
 
@@ -1840,7 +1831,7 @@ public class LocalFileCache implements ResourceCache<File>
    */
   public File getLegacyPanelObjFile() {
     PathConfig pathConfig = PathConfig.getInstance(configuration);
-    return new File(pathConfig.userFolder(account) + "panels.obj"); // TODO : should go through ResourceCache interface : EBR -> JPL : why ?
+    return new File(pathConfig.userFolder(currentUserAccount.getAccount()) + "panels.obj"); // TODO : should go through ResourceCache interface : EBR -> JPL : why ?
   }
   
   /**
@@ -1848,7 +1839,7 @@ public class LocalFileCache implements ResourceCache<File>
    */
   public File getXMLUIFile() {
     PathConfig pathConfig = PathConfig.getInstance(configuration);
-    return new File(pathConfig.userFolder(account) + "ui_state.xml");
+    return new File(pathConfig.userFolder(currentUserAccount.getAccount()) + "ui_state.xml");
   }
   
   /**
@@ -1856,7 +1847,7 @@ public class LocalFileCache implements ResourceCache<File>
    */
   public File getBuildingModelerXmlFile() {
     PathConfig pathConfig = PathConfig.getInstance(configuration);
-    return new File(pathConfig.userFolder(account) + "building_modeler.xml");
+    return new File(pathConfig.userFolder(currentUserAccount.getAccount()) + "building_modeler.xml");
   }
 
   /**
@@ -1864,7 +1855,7 @@ public class LocalFileCache implements ResourceCache<File>
    */
   public File getPanelXmlFile() {
     PathConfig pathConfig = PathConfig.getInstance(configuration);
-    return new File(pathConfig.userFolder(account) + "panel.xml");
+    return new File(pathConfig.userFolder(currentUserAccount.getAccount()) + "panel.xml");
   }
 
   /**
@@ -1872,7 +1863,7 @@ public class LocalFileCache implements ResourceCache<File>
    */
   public File getControllerXmlFile() {
     PathConfig pathConfig = PathConfig.getInstance(configuration);
-    return new File(pathConfig.userFolder(account) + "controller.xml");
+    return new File(pathConfig.userFolder(currentUserAccount.getAccount()) + "controller.xml");
   }
 
   /**
@@ -1880,7 +1871,7 @@ public class LocalFileCache implements ResourceCache<File>
    */
   public File getLircdFile() {
     PathConfig pathConfig = PathConfig.getInstance(configuration);
-    return new File(pathConfig.userFolder(account) + "lircd.conf");
+    return new File(pathConfig.userFolder(currentUserAccount.getAccount()) + "lircd.conf");
   }
   
   /**
@@ -2006,7 +1997,7 @@ public class LocalFileCache implements ResourceCache<File>
       generationContext.putSlider(slider.getOid(), slider.getSliderDetailsDTO());
     }
     
-    List<Sensor> dbSensors = sensorService.loadAll(account);
+    List<Sensor> dbSensors = sensorService.loadAll(currentUserAccount.getAccount());
     for (Sensor sensor : dbSensors) {
       generationContext.putSensor(sensor.getOid(), sensor.getSensorDetailsDTO());
     }
@@ -2021,7 +2012,7 @@ public class LocalFileCache implements ResourceCache<File>
 
     PathConfig pathConfig = PathConfig.getInstance(configuration);
     // File sessionFolder = new File(pathConfig.userFolder(sessionId));
-    File userFolder = new File(pathConfig.userFolder(account));
+    File userFolder = new File(pathConfig.userFolder(currentUserAccount.getAccount()));
     if (!userFolder.exists()) {
       boolean success = userFolder.mkdirs();
 
@@ -2042,7 +2033,7 @@ public class LocalFileCache implements ResourceCache<File>
     File controllerXMLFile = getControllerXmlFile();
     File lircdFile = getLircdFile();
 
-    File rulesDir = new File(pathConfig.userFolder(account), "rules");
+    File rulesDir = new File(pathConfig.userFolder(currentUserAccount.getAccount()), "rules");
     File rulesFile = new File(rulesDir, "modeler_rules.drl");
 
     /*
@@ -2055,8 +2046,8 @@ public class LocalFileCache implements ResourceCache<File>
      */
     try {
         Map<String, Object> map = new HashMap<String, Object>();
-        map.put("devices", deviceService.loadAllDeviceDetailsWithChildrenDTOs(account));
-        map.put("macros", deviceMacroService.loadAllMacroDetailsDTOs(account));
+        map.put("devices", deviceService.loadAllDeviceDetailsWithChildrenDTOs(currentUserAccount.getAccount()));
+        map.put("macros", deviceMacroService.loadAllMacroDetailsDTOs(currentUserAccount.getAccount()));
         map.put("configuration", controllerConfigService.listAllConfigDTOs());
         
         XStream xstream = new XStream(new StaxDriver());
@@ -2235,8 +2226,8 @@ public class LocalFileCache implements ResourceCache<File>
     /*
      * Get all sensors and commands from database.
      */
-    List<Sensor> dbSensors = account.getSensors();
-    List<Device> allDevices = account.getDevices();
+    List<Sensor> dbSensors = currentUserAccount.getAccount().getSensors();
+    List<Device> allDevices = currentUserAccount.getAccount().getDevices();
     List<DeviceCommand> allDBDeviceCommands = new ArrayList<DeviceCommand>();
 
     for (Device device : allDevices) {
@@ -2696,12 +2687,12 @@ public class LocalFileCache implements ResourceCache<File>
    *
    * @return    string with user name, email, role and account id information
    */
-  private String printUserAccountLog(User currentUser)
+  private String printUserAccountLog(UserAccount currentUserAccount)
   {
-    return "(User: " + currentUser.getUsername() +
-           ", Email: " + currentUser.getEmail() +
-           ", Roles: " + currentUser.getRole() +
-           ", Account ID: " + currentUser.getAccount().getOid() +
+    return "(User: " + currentUserAccount.getUsernamePassword().getUsername() +
+           ", Email: " + currentUserAccount.getEmail() +
+           ", Roles: " + currentUserAccount.getRole() +
+           ", Account ID: " + currentUserAccount.getAccount().getOid() +
            ")";
   }
 

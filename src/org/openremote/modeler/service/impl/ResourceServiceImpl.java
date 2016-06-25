@@ -80,6 +80,7 @@ import org.openremote.modeler.service.SensorService;
 import org.openremote.modeler.service.SliderService;
 import org.openremote.modeler.service.SwitchService;
 import org.openremote.modeler.service.UserService;
+import org.openremote.modeler.service.UserService.UserAccount;
 import org.openremote.modeler.shared.GraphicalAssetDTO;
 import org.openremote.modeler.shared.dto.DTO;
 import org.openremote.modeler.utils.FileUtilsExt;
@@ -136,7 +137,7 @@ public class ResourceServiceImpl implements ResourceService
 
       for (String name : imageNames)
       {
-        name = DesignerState.uglyImageSourcePathHack(userService.getCurrentUser(), name);
+        name = DesignerState.uglyImageSourcePathHack(userService.getCurrentUserAccount(), name);
         
         imageFiles.add(new File(name));
 
@@ -187,8 +188,9 @@ public class ResourceServiceImpl implements ResourceService
 	  // Store the upload zip file locally before processing
 	  File importFile = storeAsLocalTemporaryFile(inputStream);
 	  
-    LocalFileCache cache = createLocalFileCache(userService.getCurrentUser());
-    DesignerState state = createDesignerState(userService.getCurrentUser(), cache);
+	  UserAccount currentUserAccount = userService.getCurrentUserAccount();
+    LocalFileCache cache = createLocalFileCache(currentUserAccount);
+    DesignerState state = createDesignerState(currentUserAccount, cache);
 
     ConfigurationFileImporter importer = new ConfigurationFileImporter(userService.getAccount(), cache, state, importFile);
     importer.setControllerConfigService(controllerConfigService);
@@ -445,10 +447,10 @@ public class ResourceServiceImpl implements ResourceService
   {
     try
     {
-      User currentUser = userService.getCurrentUser();
-      LocalFileCache cache = createLocalFileCache(currentUser);
+      UserAccount currentUserAccount = userService.getCurrentUserAccount();
+      LocalFileCache cache = createLocalFileCache(currentUserAccount);
     	
-      DesignerState state = createDesignerState(currentUser, cache);
+      DesignerState state = createDesignerState(currentUserAccount, cache);
       state.restore(true, true);
 
       PanelsAndMaxOid result = state.transformToPanelsAndMaxOid();
@@ -485,8 +487,8 @@ public class ResourceServiceImpl implements ResourceService
    */
   @Override @Deprecated @Transactional public LocalFileCache saveResourcesToBeehive(Collection<Panel> panels, long maxOid)
   {
-	User currentUser = userService.getCurrentUser();
-	LocalFileCache cache = createLocalFileCache(currentUser);
+	UserAccount currentUserAccount = userService.getCurrentUserAccount();
+	LocalFileCache cache = createLocalFileCache(currentUserAccount);
 
     // Create a set of panels to eliminate potential duplicate instances...
 
@@ -495,7 +497,7 @@ public class ResourceServiceImpl implements ResourceService
     
     // Delegate implementation to DesignerState...
 
-    DesignerState state = createDesignerState(currentUser, cache);
+    DesignerState state = createDesignerState(currentUserAccount, cache);
     state.save(panelSet, maxOid);
     
     return cache;
@@ -731,8 +733,8 @@ public class ResourceServiceImpl implements ResourceService
    * 
    * @return LocalFileCache a correctly configured LocalFileCache
    */
-  private LocalFileCache createLocalFileCache(User user) {
-	  LocalFileCache cache = new LocalFileCache(configuration, user);
+  private LocalFileCache createLocalFileCache(UserAccount userAccount) {
+	  LocalFileCache cache = new LocalFileCache(configuration, userAccount);
 
 	  cache.setDeviceService(deviceService);
 	  cache.setSwitchService(switchService);
@@ -754,8 +756,8 @@ public class ResourceServiceImpl implements ResourceService
    * 
    * @return DesignerState a correctly configured DesignerState
    */
-  private DesignerState createDesignerState(User user, LocalFileCache cache) {
-    DesignerState state = new DesignerState(configuration, user, cache);
+  private DesignerState createDesignerState(UserAccount userAccount, LocalFileCache cache) {
+    DesignerState state = new DesignerState(configuration, userAccount, cache);
     state.setDeviceCommandService(deviceCommandService);
     state.setDeviceMacroService(deviceMacroService);
     state.setSensorService(sensorService);

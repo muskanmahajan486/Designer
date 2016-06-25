@@ -24,6 +24,7 @@ import java.io.InputStream;
 
 import org.openremote.modeler.domain.User;
 import org.openremote.modeler.exception.NetworkException;
+import org.openremote.modeler.service.UserService.UserAccount;
 import org.openremote.modeler.exception.ConfigurationException;
 import org.openremote.modeler.cache.ResourceCache;
 import org.openremote.modeler.cache.CacheOperationException;
@@ -50,9 +51,9 @@ public interface BeehiveService
    *
    * @see org.openremote.modeler.cache.ResourceCache#openWriteStream()
    *
-   * @param   user      a reference to user whose account is accessed
-   * @param   cache     reference to designer's local cache where the downloaded resources
-   *                    will be stored
+   * @param   userAccount  reference to information about user and account being accessed
+   * @param   cache        reference to designer's local cache where the downloaded resources
+   *                       will be stored
    *
    *
    * @throws NetworkException
@@ -76,7 +77,7 @@ public interface BeehiveService
    *                  If any errors occur as part of the interaction with the resource cache.
    *
    */
-  void downloadResources(User user, ResourceCache cache)
+  void downloadResources(UserAccount userAccount, ResourceCache cache)
       throws NetworkException, BeehiveServiceException, ConfigurationException, CacheOperationException;
 
 
@@ -87,7 +88,7 @@ public interface BeehiveService
    *                     implementations of this method must specify the requirements
    *                     for the data stream.
    *
-   * @param currentUser  The user to authenticate in Beehive.
+   * @param currentUserAccount  The user to authenticate in Beehive, along with account information
    *
    *
    * @throws ConfigurationException
@@ -101,7 +102,7 @@ public interface BeehiveService
    *                  could be re-attempted. See {@link NetworkException.Severity} for an
    *                  indication of the network error type.
    */
-  void uploadResources(InputStream input, User currentUser)
+  void uploadResources(InputStream input, UserAccount currentUserAccount)
       throws ConfigurationException, NetworkException;
 
 

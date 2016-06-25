@@ -46,6 +46,7 @@ import org.openremote.modeler.domain.Account;
 import org.openremote.modeler.exception.ConfigurationException;
 import org.openremote.modeler.exception.NetworkException;
 import org.openremote.modeler.logging.LogFacade;
+import org.openremote.modeler.service.UserService.UserAccount;
 import org.openremote.modeler.cache.CacheWriteStream;
 import org.openremote.modeler.cache.ResourceCache;
 import org.openremote.modeler.cache.CacheOperationException;
@@ -106,7 +107,7 @@ public class Beehive30API implements BeehiveService
    * Downloads a user artifact archive from Beehive server and stores it to a local resource
    * cache. 
    *
-   * @param currentUser   the user associated with the request
+   * @param userAccount   reference to information about user and account being accessed
    * @param cache         the cache to store the user resources to
    *
    * @throws ConfigurationException
@@ -125,7 +126,7 @@ public class Beehive30API implements BeehiveService
    *
    *
    */
-  @Override public void downloadResources(User currentUser, ResourceCache cache)
+  @Override public void downloadResources(UserAccount userAccount, ResourceCache cache)
       throws ConfigurationException, NetworkException, CacheOperationException
   {
 
@@ -143,7 +144,7 @@ public class Beehive30API implements BeehiveService
     {
       beehiveArchiveURI = new URI(
           config.getBeehiveRESTRootUrl() + "user/" +
-          currentUser.getUsername() + "/openremote.zip"
+              userAccount.getUsernamePassword().getUsername() + "/openremote.zip"
       );
     }
 
@@ -159,7 +160,7 @@ public class Beehive30API implements BeehiveService
 
     // Authenticate...
 
-    addHTTPAuthenticationHeader(httpGet, currentUser.getUsername(), currentUser.getPassword());
+    addHTTPAuthenticationHeader(httpGet, userAccount.getUsernamePassword().getUsername(), userAccount.getUsernamePassword().getPassword());
 
 
     // Collect some network statistics...
@@ -182,7 +183,7 @@ public class Beehive30API implements BeehiveService
           "Network error while downloading account (OID = {0}) archive from Beehive " +
           "(URL : {1}) : {2}", e,
 
-          currentUser.getAccount().getOid(), beehiveArchiveURI, e.getMessage()
+          userAccount.getAccount().getOid(), beehiveArchiveURI, e.getMessage()
       );
     }
 
@@ -194,7 +195,7 @@ public class Beehive30API implements BeehiveService
       throw new NetworkException(
           NetworkException.Severity.SEVERE,
           "Beehive did not respond to HTTP GET request, URL : {0} {1}",
-          beehiveArchiveURI, printUser(currentUser)
+          beehiveArchiveURI, printUser(userAccount)
       );
     }
 
@@ -205,7 +206,7 @@ public class Beehive30API implements BeehiveService
       throw new NetworkException(
           NetworkException.Severity.SEVERE,
           "There was no status from Beehive to HTTP GET request, URL : {0} {1}",
-          beehiveArchiveURI, printUser(currentUser)
+          beehiveArchiveURI, printUser(userAccount)
       );
     }
 
@@ -223,7 +224,7 @@ public class Beehive30API implements BeehiveService
         throw new NetworkException(
             NetworkException.Severity.SEVERE,
             "No content received from Beehive to HTTP GET request, URL : {0} {1}",
-            beehiveArchiveURI, printUser(currentUser)
+            beehiveArchiveURI, printUser(userAccount)
         );
       }
 
@@ -367,7 +368,7 @@ public class Beehive30API implements BeehiveService
           "Failed to download Beehive archive from URL ''{0}'' {1}, " +
           "HTTP Response code: {2}",
 
-          beehiveArchiveURI, printUser(currentUser), httpResponseCode
+          beehiveArchiveURI, printUser(userAccount), httpResponseCode
       );
     }
   }
@@ -382,7 +383,7 @@ public class Beehive30API implements BeehiveService
    *
    * @param archive       zip compressed byte stream containing all the resources to upload
    *                      to Beehive
-   * @param currentUser   user to authenticate in Beehive
+   * @param currentUserAccount  The user to authenticate in Beehive, along with account information
    *
    *
    * @throws ConfigurationException
@@ -394,19 +395,19 @@ public class Beehive30API implements BeehiveService
    *            returns an error status
    *
    */
-  @Override public void uploadResources(InputStream archive, User currentUser)
+  @Override public void uploadResources(InputStream archive, UserAccount currentUserAccount)
       throws ConfigurationException, NetworkException
   {
     final String ARCHIVE_NAME = "openremote.zip";
 
     // TODO : must be HTTPS
 
-    Account acct = currentUser.getAccount();
+    Account acct = currentUserAccount.getAccount();
 
     HttpClient httpClient = new DefaultHttpClient();
     HttpPost httpPost = new HttpPost();
 
-    addHTTPAuthenticationHeader(httpPost, currentUser.getUsername(), currentUser.getPassword());
+    addHTTPAuthenticationHeader(httpPost, currentUserAccount.getUsernamePassword().getUsername(), currentUserAccount.getUsernamePassword().getPassword());
 
     String beehiveRootRestURL = config.getBeehiveRESTRootUrl();
     String url = beehiveRootRestURL + "account/" + acct.getOid() + "/" + ARCHIVE_NAME;
@@ -507,14 +508,14 @@ public class Beehive30API implements BeehiveService
   /**
    * Utility to print some user account information for logging.
    *
-   * @param user    current user
+   * @param userAccount    current user and account information
    *
    * @return    (user name - email, account ID)
    */
-  private String printUser(User user)
+  private String printUser(UserAccount userAccount)
   {
-    return "(User: " + user.getUsername() + " - " + user.getEmail() +
-           ", Account OID: " + user.getAccount().getOid() + ")";
+    return "(User: " + userAccount.getUsernamePassword().getUsername() + " - " + userAccount.getEmail() +
+           ", Account OID: " + userAccount.getAccount().getOid() + ")";
   }
 
 

@@ -85,6 +85,7 @@ import org.openremote.modeler.service.DeviceMacroService;
 import org.openremote.modeler.service.SensorService;
 import org.openremote.modeler.service.SliderService;
 import org.openremote.modeler.service.SwitchService;
+import org.openremote.modeler.service.UserService.UserAccount;
 import org.openremote.modeler.shared.dto.DeviceCommandDTO;
 import org.openremote.modeler.shared.dto.MacroDTO;
 import org.openremote.modeler.shared.dto.UICommandDTO;
@@ -295,7 +296,7 @@ class DesignerState
     }
   }
 
-  protected static String uglyImageSourcePathHack(User user, String str)
+  protected static String uglyImageSourcePathHack(UserAccount userAccount, String str)
   {
     // TODO :
     //
@@ -315,7 +316,7 @@ class DesignerState
     //                                                                            [JPL]
 
 
-    if (str.startsWith(PathConfig.RESOURCEFOLDER + "/" + user.getAccount().getOid() + "/"))
+    if (str.startsWith(PathConfig.RESOURCEFOLDER + "/" + userAccount.getAccount().getOid() + "/"))
     {
       saveLog.warn("Found ''{0}'' -- there should be no path included...", str);
 
@@ -336,9 +337,9 @@ class DesignerState
   private Collection<Panel> panels = new ArrayList<Panel>();
 
   /**
-   * The current user executing the operations.
+   * The current account and user executing the operations.
    */
-  private User user;
+  private UserAccount userAccount;
 
   /**
    * Designer configuration.
@@ -359,13 +360,13 @@ class DesignerState
    * Constructs a new designer state management instance for the given user.
    *
    * @param config    Designer configuration
-   * @param user      current user associated with the incoming HTTP request thread
+   * @param userAccount current account and user associated with the incoming HTTP request thread
    * @param cache	  LocalFileCache associated with the user
    */
-  protected DesignerState(Configuration config, User user, LocalFileCache cache)
+  protected DesignerState(Configuration config, UserAccount userAccount, LocalFileCache cache)
   {
     this.configuration = config;
-    this.user = user;
+    this.userAccount = userAccount;
     this.cache = cache;
   }
 
@@ -418,7 +419,7 @@ class DesignerState
 
       restoreLog.info(
           "Attempting to restore designer panel UI state for user {0} (Acct ID : {1})",
-          user.getUsername(), user.getAccount().getOid()
+          userAccount.getUsernamePassword().getUsername(), userAccount.getAccount().getOid()
       );
 
 
@@ -441,11 +442,11 @@ class DesignerState
         restoreLog.info(
             "There was no serialized panels.obj file, no serialized XML stream and no local " +
             "cache backups found in local user cache {0}. No user state was found in Beehive. " +
-            "Assuming a new user with no saved design.", printUserAccountLog(user)
+            "Assuming a new user with no saved design.", printUserAccountLog(userAccount)
         );
 
         LogFacade.getInstance(LogFacade.Category.USER).info(
-            "NEW USER: {0}", printUserAccountLog(user)
+            "NEW USER: {0}", printUserAccountLog(userAccount)
         );
 
         return;
@@ -538,7 +539,7 @@ class DesignerState
         {
           admin.alert(
               "There was a state restoration error from panels.obj file in account {0} ({1}) : {2}",
-              e, user.getAccount().getOid(), printUserAccountLog(user), e.getMessage()
+              e, userAccount.getAccount().getOid(), printUserAccountLog(userAccount), e.getMessage()
           );
         }
       }
@@ -561,7 +562,7 @@ class DesignerState
 
       haltAccount(
           MessageFormat.format(
-              "CRITICAL CONFIGURATION ERROR ({0}) : {1}", printUserAccountLog(user), e.getMessage()
+              "CRITICAL CONFIGURATION ERROR ({0}) : {1}", printUserAccountLog(userAccount), e.getMessage()
           ),
 
           MessageFormat.format(
@@ -581,7 +582,7 @@ class DesignerState
 
       haltAccount(
           MessageFormat.format(
-              "RUNTIME I/O ERROR : {0} ({1}).", e.getMessage(), printUserAccountLog(user)
+              "RUNTIME I/O ERROR : {0} ({1}).", e.getMessage(), printUserAccountLog(userAccount)
           ),
 
           MessageFormat.format(
@@ -601,7 +602,7 @@ class DesignerState
 
       haltAccount(
           MessageFormat.format(
-              "IMPLEMENTATION ERROR : {0} ({1}).", t.getMessage(), printUserAccountLog(user)
+              "IMPLEMENTATION ERROR : {0} ({1}).", t.getMessage(), printUserAccountLog(userAccount)
           ),
 
           MessageFormat.format(
@@ -617,7 +618,7 @@ class DesignerState
 
     finally
     {
-      perf.stopTimer("Restore time " + printUserAccountLog(user) + " : {0} seconds.");
+      perf.stopTimer("Restore time " + printUserAccountLog(userAccount) + " : {0} seconds.");
 
       removeContextLog();
     }
@@ -875,7 +876,7 @@ class DesignerState
       // Pushes in-memory model to our local cache, as this is used as the source to save to beehive
       cache.replace(panels, maxOid);
 
-      Account acct = user.getAccount();
+      Account acct = userAccount.getAccount();
 
       // This is a safety lock -- if there has been previous errors then the save operation
       // may have been disabled. Prevents autosave from corrupting data...
@@ -915,7 +916,7 @@ class DesignerState
 
           for (String imageName : imageNames)
           {
-            imageName = uglyImageSourcePathHack(user, imageName);
+            imageName = uglyImageSourcePathHack(userAccount, imageName);
 
             imageFiles.add(new File(imageName));
 
@@ -942,9 +943,9 @@ class DesignerState
 
         // Upload ZIP to Beehive server...
 
-        beehive.uploadResources(cache.openReadStream(), user);
+        beehive.uploadResources(cache.openReadStream(), userAccount);
 
-        saveLog.info("Saved resources for {0}", printUserAccountLog(user));
+        saveLog.info("Saved resources for {0}", printUserAccountLog(userAccount));
       }
 
       catch (NetworkException e)
@@ -963,7 +964,7 @@ class DesignerState
       {
         admin.alert(
             "Can't save account data due to cache error. Account ID : {0}, User : {1}. " +
-            "Error: {2}", e, user.getAccount().getOid(), printUserAccountLog(user), e.getMessage()
+            "Error: {2}", e, userAccount.getAccount().getOid(), printUserAccountLog(userAccount), e.getMessage()
         );
 
         throw new UIRestoreException(
@@ -976,7 +977,7 @@ class DesignerState
       {
         admin.alert(
             "Save failed for account {0} due to configuration error : {1}",
-            e, user.getAccount().getOid(), e.getMessage()
+            e, userAccount.getAccount().getOid(), e.getMessage()
         );
 
         throw new UIRestoreException(
@@ -1002,7 +1003,7 @@ class DesignerState
 
     finally
     {
-      perf.stopTimer("Save time " + printUserAccountLog(user) + " : {0} seconds.");
+      perf.stopTimer("Save time " + printUserAccountLog(userAccount) + " : {0} seconds.");
 
       removeContextLog();
     }
@@ -1228,8 +1229,8 @@ class DesignerState
    */
   private void addContextLog()
   {
-    LogFacade.addUserName(user.getUsername());
-    LogFacade.addAccountID(user.getAccount().getOid());
+    LogFacade.addUserName(userAccount.getUsernamePassword().getUsername());
+    LogFacade.addAccountID(userAccount.getAccount().getOid());
   }
 
   /**
@@ -1277,7 +1278,7 @@ class DesignerState
     //   - notify admins
     //   - inform user
 
-    haltAccountSave.add(user.getAccount().getOid());
+    haltAccountSave.add(userAccount.getAccount().getOid());
 
     if (exception != null)
     {
@@ -1299,17 +1300,16 @@ class DesignerState
    *
    * TODO : should be reused via User domain object
    *
-   * @param currentUser   current logged in user (as per the http session associated with this
-   *                      thread)
+   * @param currentUserAccount   current logged in user (as per the http session associated with this thread) and account
    *
    * @return    string with user name, email, role and account id information
    */
-  private String printUserAccountLog(User currentUser)
+  private String printUserAccountLog(UserAccount currentUserAccount)
   {
-    return "(User: " + currentUser.getUsername() +
-           ", Email: " + currentUser.getEmail() +
-           ", Roles: " + currentUser.getRole() +
-           ", Account ID: " + currentUser.getAccount().getOid() +
+    return "(User: " + currentUserAccount.getUsernamePassword().getUsername() +
+           ", Email: " + currentUserAccount.getEmail() +
+           ", Roles: " + currentUserAccount.getRole() +
+           ", Account ID: " + currentUserAccount.getAccount().getOid() +
            ")";
   }
 
