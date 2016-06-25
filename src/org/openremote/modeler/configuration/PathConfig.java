@@ -172,7 +172,7 @@ public class PathConfig {
    }
    
    public String userFolder(Account account) {
-      return tempFolder()+account.getOid()+File.separator;
+      return tempFolder() + account.getOid() + File.separator;
    }
 
 //   /**
