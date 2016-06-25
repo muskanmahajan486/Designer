@@ -58,7 +58,6 @@ import org.openremote.modeler.domain.Panel;
 import org.openremote.modeler.domain.Panel.UIComponentOperation;
 import org.openremote.modeler.domain.ScreenPair;
 import org.openremote.modeler.domain.Template;
-import org.openremote.modeler.domain.User;
 import org.openremote.modeler.domain.component.ImageSource;
 import org.openremote.modeler.domain.component.UIButton;
 import org.openremote.modeler.domain.component.UIComponent;

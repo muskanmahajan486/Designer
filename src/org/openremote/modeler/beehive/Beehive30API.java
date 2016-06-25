@@ -41,7 +41,6 @@ import org.apache.http.entity.mime.MultipartEntity;
 import org.apache.commons.codec.binary.Base64;
 import org.openremote.modeler.client.Configuration;
 import org.openremote.modeler.client.Constants;
-import org.openremote.modeler.domain.User;
 import org.openremote.modeler.domain.Account;
 import org.openremote.modeler.exception.ConfigurationException;
 import org.openremote.modeler.exception.NetworkException;

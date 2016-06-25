@@ -22,7 +22,6 @@ package org.openremote.modeler.beehive;
 
 import java.io.InputStream;
 
-import org.openremote.modeler.domain.User;
 import org.openremote.modeler.exception.NetworkException;
 import org.openremote.modeler.service.UserService.UserAccount;
 import org.openremote.modeler.exception.ConfigurationException;
