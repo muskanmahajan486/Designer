@@ -39,6 +39,7 @@ import org.openremote.modeler.exception.UserChangePasswordException;
 import org.openremote.modeler.exception.UserInvitationException;
 import org.openremote.modeler.service.BaseAbstractService;
 import org.openremote.modeler.service.UserService;
+import org.openremote.modeler.service.UserService.UserAccount;
 import org.openremote.modeler.service.UserService.UsernamePassword;
 import org.openremote.modeler.utils.XmlParser;
 import org.openremote.rest.GenericResourceResultWithErrorMessage;
@@ -82,6 +83,15 @@ public class UserServiceImpl extends BaseAbstractService<User> implements UserSe
    public UsernamePassword getCurrentUsernamePassword() {
      return new UsernamePassword(SecurityContextHolder.getContext().getAuthentication().getName(),
          SecurityContextHolder.getContext().getAuthentication().getCredentials().toString());
+   }
+
+    /**
+     * {@inheritDoc}
+     */
+     @Override
+   public UserAccount getCurrentUserAccount() {
+     User currentUser = getCurrentUser();
+     return new UserAccount(currentUser.getAccount(), currentUser.getEmail(), currentUser.getRole(), getCurrentUsernamePassword());
    }
 
    /**

@@ -41,6 +41,13 @@ public interface UserService {
    */
   UsernamePassword getCurrentUsernamePassword();
   
+   /**
+    * Gets information about currently logged in user and associated account.
+    * 
+    * @return Information about user and account.
+    */
+   UserAccount getCurrentUserAccount();
+  
    void saveUser(User user);
    
    void updateUser(UserDTO user);
@@ -206,5 +213,45 @@ public interface UserService {
        return password;
      }
      
+   }
+   
+   /**
+    * Class to hold combined information about user and account.
+    */
+   public class UserAccount {
+     private Account account;
+     private String email;
+     private String role;
+     private UsernamePassword usernamePassword;
+     
+     public UserAccount(Account account, String email, String role, UsernamePassword usernamePassword)
+     {
+       super();
+       this.account = account;
+       this.email = email;
+       this.role = role;
+       this.usernamePassword = usernamePassword;
+     }
+
+     public Account getAccount()
+     {
+       return account;
+     }
+
+     public String getEmail()
+     {
+       return email;
+     }
+
+     public String getRole()
+     {
+       return role;
+     }
+     
+     public UsernamePassword getUsernamePassword()
+     {
+       return usernamePassword;
+     }
+
    }
 }
