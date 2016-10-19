@@ -4,7 +4,7 @@
             xsi:schemaLocation = "http://www.openremote.org touchpanel_bg.xsd">
 
   <panel name = "iPadPro" type = "iPad 12.9 Pro" 
-         bgImage = "resources/images/iPad_background.png" 
+         bgImage = "resources/images/iPadPro_background.png" 
          width = "1147" height = "1588" paddingLeft = "61" paddingTop = "110">
 
       <canvas width = "1024" height = "1366" />
