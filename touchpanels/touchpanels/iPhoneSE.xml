@@ -3,7 +3,7 @@
             xmlns:xsi = "http://www.w3.org/2001/XMLSchema-instance"
             xsi:schemaLocation = "http://www.openremote.org touchpanel_bg.xsd">
 
-  <panel name = "iPhoneSE" type = "iPhone5 and SE" 
+  <panel name="iPhone5 and SE" type="iPhoneSE"  
          bgImage = "resources/images/iPhoneSE_background.png" 
          width = "374" height = "793" paddingLeft = "27" paddingTop = "113">
 

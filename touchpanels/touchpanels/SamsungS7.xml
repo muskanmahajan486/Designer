@@ -3,7 +3,7 @@
             xmlns:xsi = "http://www.w3.org/2001/XMLSchema-instance"
             xsi:schemaLocation = "http://www.openremote.org touchpanel_bg.xsd">
 
-  <panel name = "SamsungS7" type = "Samsung S6, S7, Note4, 5, and 7" 
+  <panel name="Samsung S6, S7, Note4, 5, and 7" type="SamsungS7"  
          bgImage = "resources/images/SamsungS7_background.png" 
          width = "1587" height = "3197" paddingLeft = "69" paddingTop = "332">
 

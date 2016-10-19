@@ -3,7 +3,7 @@
             xmlns:xsi = "http://www.w3.org/2001/XMLSchema-instance"
             xsi:schemaLocation = "http://www.openremote.org touchpanel_bg.xsd">
 
-  <panel name = "SamsungTabS2" type = "Samsung Galaxy Tab S2 8.0 and 9.7" 
+  <panel name="Samsung Galaxy Tab S2 8.0 and 9.7" type="SamsungTabS2"
          bgImage = "resources/images/SamsungTabS2_background.png" 
          width = "1722" height = "2494" paddingLeft = "93" paddingTop = "224">
 
