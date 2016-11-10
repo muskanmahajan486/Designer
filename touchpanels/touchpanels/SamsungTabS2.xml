@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<openremote xmlns = "http://www.openremote.org" 
+            xmlns:xsi = "http://www.w3.org/2001/XMLSchema-instance"
+            xsi:schemaLocation = "http://www.openremote.org touchpanel_bg.xsd">
+
+  <panel name="Samsung Galaxy Tab S2 8.0 and 9.7" type="SamsungTabS2"
+         bgImage = "resources/images/SamsungTabS2_background.png" 
+         width = "1722" height = "2494" paddingLeft = "93" paddingTop = "224">
+
+      <canvas width = "1536" height = "2048" />
+      <tabbar height = "44" bgImage = "resources/images/iphone_tabbar_bg.png" />
+
+  </panel>
+</openremote>

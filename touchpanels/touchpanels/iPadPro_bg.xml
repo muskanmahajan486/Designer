@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<openremote xmlns = "http://www.openremote.org" 
+            xmlns:xsi = "http://www.w3.org/2001/XMLSchema-instance"
+            xsi:schemaLocation = "http://www.openremote.org touchpanel_bg.xsd">
+
+  <panel name="iPad 12.9 Pro" type="iPadPro"  
+         bgImage = "resources/images/iPadPro_background.png" 
+         width = "1147" height = "1588" paddingLeft = "61" paddingTop = "110">
+
+      <canvas width = "1024" height = "1366" />
+      <tabbar height = "44" bgImage = "resources/images/iphone_tabbar_bg.png" />
+
+  </panel>
+</openremote>
