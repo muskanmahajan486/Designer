@@ -884,8 +884,11 @@ class DesignerState
         saveLog.error("Did not save to Beehive due to earlier restore failure");
 
         // TODO : could save a recovery copy
-
-        return;
+        
+        throw new UIRestoreException(
+                "Saving your design failed due a prior safety lock of your account. Administrators have been notified " +
+                "of this issue."
+            );
       }
 
 
