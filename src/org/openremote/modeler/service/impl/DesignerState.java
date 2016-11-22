@@ -564,7 +564,7 @@ class DesignerState
           ),
 
           MessageFormat.format(
-              "There's an issue with the server configuration that has prevented restoring your " +
+              "There is an issue with the server configuration that has prevented restoring your " +
               "account data from Beehive. The administrator has been notified of this issue. As a " +
               "safety precaution, all changes to your account data has been disabled until the " +
               "issue has been resolved. Do not make changes to your designs or configuration " +
