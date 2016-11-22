@@ -81,7 +81,7 @@ public interface UtilsRPCService extends RemoteService {
     * @throws IllegalRestUrlException the illegal rest url exception
     * @throws ResourceFileLostException the resource file lost exception
     */
-   AutoSaveResponse autoSaveUiDesignerLayout(Collection<Panel> panels, long maxID) throws BeehiveNotAvailableException,FileOperationException,IllegalRestUrlException,ResourceFileLostException;
+   AutoSaveResponse autoSaveUiDesignerLayout(Collection<Panel> panels, long maxID) throws UIRestoreException,BeehiveNotAvailableException,FileOperationException,IllegalRestUrlException,ResourceFileLostException;
    
    /**
     * Manually save ui designer layout into server and beehive.
@@ -97,7 +97,7 @@ public interface UtilsRPCService extends RemoteService {
     * @throws IllegalRestUrlException the illegal rest url exception
     * @throws ResourceFileLostException the resource file lost exception
     */
-   AutoSaveResponse saveUiDesignerLayout(Collection<Panel> panels, long maxID) throws BeehiveNotAvailableException,FileOperationException,IllegalRestUrlException,ResourceFileLostException;
+   AutoSaveResponse saveUiDesignerLayout(Collection<Panel> panels, long maxID) throws UIRestoreException,BeehiveNotAvailableException,FileOperationException,IllegalRestUrlException,ResourceFileLostException;
    
    /**
     * Restore panels and max oid from server or beehive.
