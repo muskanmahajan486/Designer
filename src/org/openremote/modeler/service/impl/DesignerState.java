@@ -1246,25 +1246,6 @@ class DesignerState
     LogFacade.removeAccountID();
   }
 
-
-  private boolean hasXMLUIState()
-  {
-    return false; // TODO
-  }
-
-
-  /**
-   * Halts account save/restore operations in case of critical errors.
-   *
-   * @param adminMessage    Message to log to admins
-   * @param userMessage     Message to display to user
-   */
-  private void haltAccount(String adminMessage, String userMessage)
-  {
-    haltAccount(adminMessage, userMessage, null);
-  }
-
-
   /**
    * Halts account save/restore operations in case of critical errors
    * 
