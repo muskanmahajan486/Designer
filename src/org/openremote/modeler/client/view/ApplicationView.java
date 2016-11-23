@@ -213,8 +213,12 @@ public class ApplicationView implements View {
          @Override
          public void onFailure(Throwable caught) {
             if (caught instanceof UIRestoreException) {
-              uiDesignerView.getProfilePanel().setInitialized(true);
+              // EBR - 20161122 - #6: Added non null check so this call does not crash, but not sure it'll ever be non-null here 
+              if (uiDesignerView != null) {
+                uiDesignerView.getProfilePanel().setInitialized(true);
+              }
             }
+
             super.onFailure(caught);
             super.checkTimeout(caught);
          }

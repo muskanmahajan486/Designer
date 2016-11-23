@@ -49,10 +49,12 @@ import org.openremote.modeler.domain.Panel;
 import org.openremote.modeler.domain.PositionableAndSizable;
 import org.openremote.modeler.domain.Screen;
 import org.openremote.modeler.domain.component.UIGrid;
+import org.openremote.modeler.exception.UIRestoreException;
 
 import com.extjs.gxt.ui.client.data.BeanModel;
 import com.extjs.gxt.ui.client.widget.Info;
 import com.extjs.gxt.ui.client.widget.InfoConfig;
+import com.extjs.gxt.ui.client.widget.MessageBox;
 import com.google.gwt.event.shared.EventBus;
 import com.google.gwt.i18n.client.DateTimeFormat;
 import com.google.gwt.user.client.Cookies;
@@ -193,8 +195,11 @@ public class UIDesignerPresenter implements Presenter, UIDesignerToolbar.Present
                        timer.cancel();
                        boolean timeout = super.checkTimeout(caught);
                        if (!timeout) {
-                          Info.display(new InfoConfig("Error", caught.getMessage() + " "
-                                + DateTimeFormat.getFormat("HH:mm:ss").format(new Date())));
+                    	   if (caught instanceof UIRestoreException) {
+                    		   MessageBox.alert("Error", caught.getMessage(), null);
+                    	   } else {
+                             Info.display(new InfoConfig("Error", caught.getMessage() + " " + DateTimeFormat.getFormat("HH:mm:ss").format(new Date())));
+                    	   }
                        }
                        Window.setStatus("Failed to save UI designer layout at: "
                              + DateTimeFormat.getFormat("HH:mm:ss").format(new Date()));
